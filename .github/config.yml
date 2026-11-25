@@ -4,7 +4,7 @@ economy:
 
 spawning:
   enabled: true
-  worlds: [world]             # كل عوالم Overworld المحددة هنا؛ [] = كل عوالم Overworld
+  worlds: []                  # كل عوالم Overworld
   interval-ticks: 60          # كل 3 ثوانٍ
   chance-per-player: 0.98
   attempts-per-player: 4      # محاولات ظهور متعددة لكل لاعب
