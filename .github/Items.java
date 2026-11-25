@@ -88,11 +88,13 @@ public final class Items {
         Def d = of(s);
         if (d == null || !d.armor()) return;
         ItemMeta m = s.getItemMeta();
-        m.setItemModel(new NamespacedKey("beeupdate", d.id()));
+        // Rebuild the equipment asset component every time, then write the complete
+        // ItemMeta snapshot back. The asset id is the equipment JSON name, not item id.
         EquippableComponent eq = m.getEquippable();
         eq.setSlot(slot(d.kind()));
         eq.setModel(new NamespacedKey("beeupdate", SETS[d.tier() - 1]));
         m.setEquippable(eq);
+        m.setItemModel(new NamespacedKey("beeupdate", d.id()));
         s.setItemMeta(m);
     }
 
@@ -114,14 +116,16 @@ public final class Items {
             if (m instanceof Damageable dm) dm.setMaxDamage(d.durability());
         }
         m.customName(BeeUpdate.text("&6" + d.name()));
-        m.setItemModel(new NamespacedKey("beeupdate", id));
+        apply(m, d, 0);
         if (d.armor()) {
+            // Apply equippable after all other meta edits so its equipment asset
+            // component is the final value stored on the finished armor item.
             EquippableComponent eq = m.getEquippable();
             eq.setSlot(slot(d.kind()));
             eq.setModel(new NamespacedKey("beeupdate", SETS[d.tier() - 1]));
             m.setEquippable(eq);
         }
-        apply(m, d, 0);
+        m.setItemModel(new NamespacedKey("beeupdate", id));
         s.setItemMeta(m);
         return s;
     }
