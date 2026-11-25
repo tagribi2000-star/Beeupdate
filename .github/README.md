@@ -85,3 +85,6 @@ Special Items: Royal Jelly و Honey Bomb و Bee Repellent.
 ## إعادة الاختبار والتوليد
     javac -d out src/main/java/me/beeupdate/{Ledger,RewardGuard}.java tools/LogicTest.java && java -cp out LogicTest
     python3 tools/make_pack.py && python3 tools/check.py
+
+## CI
+GitHub Actions builds the Paper 26.3 plugin with Java 25 on pushes to `main` and pull requests targeting `main`.
