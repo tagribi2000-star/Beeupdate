@@ -34,6 +34,8 @@ public final class BeeMobs implements Listener {
     private final NamespacedKey typeKey, naturalKey, rewardedKey, displayKey;
     private final Map<UUID, Bee> alive = new HashMap<>();
     private final Map<UUID, ItemDisplay> displays = new HashMap<>();
+    private final Map<UUID, ItemDisplay[]> wings = new HashMap<>();
+    private long animationStep;
     private final Map<UUID, Long> lastAttack = new HashMap<>();
     private final Map<UUID, Long> repelled = new HashMap<>();
     private final RewardGuard guard = new RewardGuard();
@@ -68,6 +70,7 @@ public final class BeeMobs implements Listener {
         long interval = Math.max(20, plugin.getConfig().getInt("spawning.interval-ticks", 200));
         tasks.add(sch.runTaskTimer(plugin, this::spawnCycle, interval, interval));
         tasks.add(sch.runTaskTimer(plugin, this::think, 20, 20));
+        tasks.add(sch.runTaskTimer(plugin, this::animateWings, 2, 2));
     }
 
     Set<String> typeIds() { return types.keySet(); }
@@ -96,40 +99,82 @@ public final class BeeMobs implements Listener {
         if (!c.getBoolean("spawning.enabled", true) || types.isEmpty()) return;
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
         long now = System.currentTimeMillis();
-        double nearby = c.getDouble("spawning.nearby-radius", 64);
-        double afkRadius = c.getDouble("afk.block-radius", 64);
-        double min = c.getDouble("spawning.min-distance", 24);
+        double nearby = c.getDouble("spawning.nearby-radius", 72);
+        double min = Math.max(8, c.getDouble("spawning.min-distance", 20));
         double max = Math.max(min + 1, c.getDouble("spawning.max-distance", 48));
+        int maxTotal = Math.max(1, c.getInt("spawning.max-total", 180));
+        int maxPerPlayer = Math.max(1, c.getInt("spawning.max-per-player", 14));
+        int attempts = Math.max(1, c.getInt("spawning.attempts-per-player", 4));
+        List<String> worlds = c.getStringList("spawning.worlds");
 
         for (Player p : plugin.getServer().getOnlinePlayers()) {
-            if (alive.size() >= c.getInt("spawning.max-total", 40)) return;
+            if (alive.size() >= maxTotal) return;
             World w = p.getWorld();
-            if (!c.getStringList("spawning.worlds").contains(w.getName()) || w.getDifficulty() == Difficulty.PEACEFUL
+            if (w.getEnvironment() != World.Environment.NORMAL
+                    || (!worlds.isEmpty() && !worlds.contains(w.getName()))
+                    || w.getDifficulty() == Difficulty.PEACEFUL
                     || (p.getGameMode() != GameMode.SURVIVAL && p.getGameMode() != GameMode.ADVENTURE)
                     || plugin.afk().isAfk(p) || repelled.getOrDefault(p.getUniqueId(), 0L) > now
-                    || rnd.nextDouble() > c.getDouble("spawning.chance-per-player", 0.4)) continue;
+                    || rnd.nextDouble() > c.getDouble("spawning.chance-per-player", 0.98)) continue;
+
             long close = alive.values().stream().filter(b -> b.getWorld() == w
                     && b.getLocation().distanceSquared(p.getLocation()) < nearby * nearby).count();
-            if (close >= c.getInt("spawning.max-per-player", 3)) continue;
-
-            double angle = rnd.nextDouble(Math.PI * 2), dist = rnd.nextDouble(min, max);
-            int x = (int) Math.floor(p.getLocation().getX() + Math.cos(angle) * dist);
-            int z = (int) Math.floor(p.getLocation().getZ() + Math.sin(angle) * dist);
-            if (!w.isChunkLoaded(x >> 4, z >> 4)) continue; // never force-load chunks
-            Block ground = w.getHighestBlockAt(x, z, HeightMap.MOTION_BLOCKING_NO_LEAVES);
-            if (!c.getStringList("spawning.allowed-ground").contains(ground.getType().name())) continue;
-            Location at = ground.getLocation().add(0.5, 1.5, 0.5);
-            if (!at.getBlock().isPassable() || at.getBlock().isLiquid() || !w.getWorldBorder().isInside(at)
-                    || isProtected(at)) continue;
-            boolean blocked = w.getPlayers().stream().anyMatch(o -> {
-                double d = o.getLocation().distanceSquared(at);
-                return d < min * min || (d < afkRadius * afkRadius
-                        && (plugin.afk().isAfk(o) || repelled.getOrDefault(o.getUniqueId(), 0L) > now));
-            });
-            if (blocked) continue;
-            Type t = pick(w, at);
-            if (t != null) spawn(t, at, true);
+            for (int i = 0; i < attempts && close < maxPerPlayer && alive.size() < maxTotal; i++) {
+                Location at = findSpawnLocation(p, rnd, min, max, now);
+                if (at == null) continue;
+                Type t = pick(w, at);
+                if (t != null && spawn(t, at, true)) close++;
+            }
         }
+    }
+
+    /** Finds safe surface or underground air in an already-loaded chunk. */
+    private Location findSpawnLocation(Player p, ThreadLocalRandom rnd, double min, double max, long now) {
+        World w = p.getWorld();
+        double angle = rnd.nextDouble(Math.PI * 2);
+        double dist = rnd.nextDouble(min, max);
+        int x = (int) Math.floor(p.getLocation().getX() + Math.cos(angle) * dist);
+        int z = (int) Math.floor(p.getLocation().getZ() + Math.sin(angle) * dist);
+        if (!w.isChunkLoaded(x >> 4, z >> 4)) return null;
+
+        boolean cave = rnd.nextDouble() < plugin.getConfig().getDouble("spawning.cave-chance", 0.55);
+        Block floor = null;
+        Block feet = null;
+        Block head = null;
+        if (cave) {
+            int playerY = p.getLocation().getBlockY();
+            int low = Math.max(w.getMinHeight() + 5, playerY - 26);
+            int high = Math.min(w.getMaxHeight() - 3, playerY + 8);
+            if (high <= low) return null;
+            for (int n = 0; n < 12; n++) {
+                int y = rnd.nextInt(low, high + 1);
+                Block f = w.getBlockAt(x, y - 1, z);
+                Block a = w.getBlockAt(x, y, z);
+                Block h = w.getBlockAt(x, y + 1, z);
+                if (f.getType().isSolid() && a.isPassable() && h.isPassable()
+                        && !a.isLiquid() && !h.isLiquid() && a.getLightFromSky() == 0) {
+                    floor = f; feet = a; head = h; break;
+                }
+            }
+        } else {
+            floor = w.getHighestBlockAt(x, z, HeightMap.MOTION_BLOCKING_NO_LEAVES);
+            feet = w.getBlockAt(x, floor.getY() + 1, z);
+            head = w.getBlockAt(x, floor.getY() + 2, z);
+            if (!floor.getType().isSolid() || !feet.isPassable() || !head.isPassable()
+                    || feet.isLiquid() || head.isLiquid()) return null;
+        }
+        if (floor == null || feet == null || head == null) return null;
+
+        Location at = feet.getLocation().add(0.5, 0.05, 0.5);
+        if (!w.getWorldBorder().isInside(at) || isProtected(at)) return null;
+        double afkRadius = plugin.getConfig().getDouble("afk.block-radius", 64);
+        for (Player other : w.getPlayers()) {
+            double d = other.getLocation().distanceSquared(at);
+            if (d < min * min || (d < afkRadius * afkRadius
+                    && (plugin.afk().isAfk(other) || repelled.getOrDefault(other.getUniqueId(), 0L) > now)))
+                return null;
+        }
+        return at;
     }
 
     private Type pick(World w, Location at) {
@@ -183,28 +228,50 @@ public final class BeeMobs implements Listener {
         if (i != null) i.setBaseValue(value);
     }
 
-    private void attachModel(Bee bee, Type t) {
-        float y = (float) plugin.getConfig().getDouble("models.y-offset", -0.35) * t.scale();
+    private ItemDisplay createDisplay(Bee bee, Type t, String model, float y, Quaternionf rotation) {
         ItemStack icon = new ItemStack(Material.PAPER);
-        icon.editMeta(m -> m.setItemModel(new NamespacedKey("beeupdate", "mob/" + t.id())));
+        icon.editMeta(m -> m.setItemModel(new NamespacedKey("beeupdate", model)));
         ItemDisplay d = bee.getWorld().spawn(bee.getLocation(), ItemDisplay.class, x -> {
             x.setPersistent(false);
             x.getPersistentDataContainer().set(displayKey, PersistentDataType.BOOLEAN, true);
             x.setItemStack(icon);
             x.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-            x.setTransformation(new Transformation(new Vector3f(0, y, 0), new Quaternionf(),
+            x.setInterpolationDuration(2);
+            x.setTransformation(new Transformation(new Vector3f(0, y, 0), rotation,
                     new Vector3f(t.scale(), t.scale(), t.scale()), new Quaternionf()));
         });
         bee.addPassenger(d);
-        displays.put(bee.getUniqueId(), d);
+        return d;
     }
 
-    private void rotate() {
-        float offset = (float) plugin.getConfig().getDouble("models.yaw-offset", 0);
-        displays.forEach((id, d) -> {
-            Bee b = alive.get(id);
-            if (b != null && b.isValid() && d.isValid()) d.setRotation(b.getBodyYaw() + offset, 0);
-        });
+    private void attachModel(Bee bee, Type t) {
+        float y = (float) plugin.getConfig().getDouble("models.y-offset", -0.35) * t.scale();
+        String base = "mob/" + t.id();
+        displays.put(bee.getUniqueId(), createDisplay(bee, t, base, y, new Quaternionf()));
+        ItemDisplay left = createDisplay(bee, t, base + "_wing_left", y, new Quaternionf());
+        ItemDisplay right = createDisplay(bee, t, base + "_wing_right", y, new Quaternionf());
+        wings.put(bee.getUniqueId(), new ItemDisplay[]{left, right});
+    }
+
+    /** Animate only the detached wing displays; the body never receives per-tick rotations. */
+    private void animateWings() {
+        animationStep++;
+        for (Map.Entry<UUID, ItemDisplay[]> entry : new ArrayList<>(wings.entrySet())) {
+            UUID id = entry.getKey();
+            Bee bee = alive.get(id);
+            ItemDisplay[] pair = entry.getValue();
+            if (bee == null || !bee.isValid() || !pair[0].isValid() || !pair[1].isValid()) continue;
+            Type t = types.get(bee.getPersistentDataContainer().get(typeKey, PersistentDataType.STRING));
+            if (t == null) continue;
+            float phase = (float) ((id.hashCode() & 255) * 0.02454369);
+            float flap = (float) Math.sin(animationStep * 0.55 + phase) * 0.72f;
+            float y = (float) plugin.getConfig().getDouble("models.y-offset", -0.35) * t.scale();
+            Vector3f scale = new Vector3f(t.scale(), t.scale(), t.scale());
+            pair[0].setTransformation(new Transformation(new Vector3f(0, y, 0),
+                    new Quaternionf().rotationZ(flap), scale, new Quaternionf()));
+            pair[1].setTransformation(new Transformation(new Vector3f(0, y, 0),
+                    new Quaternionf().rotationZ(-flap), scale, new Quaternionf()));
+        }
     }
 
     /** Once a second: despawn far bees, drop dead references, and make bees hostile. */
@@ -238,6 +305,8 @@ public final class BeeMobs implements Listener {
         guard.forget(id);
         ItemDisplay d = displays.remove(id);
         if (d != null) d.remove();
+        ItemDisplay[] pair = wings.remove(id);
+        if (pair != null) for (ItemDisplay wing : pair) wing.remove();
         if (!b.isDead()) b.remove();
     }
 
@@ -304,17 +373,31 @@ public final class BeeMobs implements Listener {
         lastAttack.remove(id);
         ItemDisplay d = displays.remove(id);
         if (d != null) d.remove();
+        ItemDisplay[] pair = wings.remove(id);
+        if (pair != null) for (ItemDisplay wing : pair) wing.remove();
     }
 
     @EventHandler public void removed(EntityRemoveEvent e) {
-        ItemDisplay d = displays.remove(e.getEntity().getUniqueId());
+        UUID id = e.getEntity().getUniqueId();
+        ItemDisplay d = displays.remove(id);
         if (d != null) plugin.getServer().getScheduler().runTask(plugin, d::remove);
+        ItemDisplay[] pair = wings.remove(id);
+        if (pair != null) for (ItemDisplay wing : pair)
+            plugin.getServer().getScheduler().runTask(plugin, wing::remove);
+    }
+
+    private boolean isTrackedDisplay(Entity entity) {
+        if (!(entity instanceof ItemDisplay display)) return false;
+        if (displays.containsValue(display)) return true;
+        for (ItemDisplay[] pair : wings.values())
+            if (pair[0] == display || pair[1] == display) return true;
+        return false;
     }
 
     /** Safety net for leftovers from a crash. */
     @EventHandler public void loaded(EntitiesLoadEvent e) {
         for (Entity x : e.getEntities())
-            if ((x.getPersistentDataContainer().has(displayKey) && !displays.containsValue(x))
+            if ((x.getPersistentDataContainer().has(displayKey) && !isTrackedDisplay(x))
                     || (isCustom(x) && !alive.containsKey(x.getUniqueId()))) x.remove();
     }
 
