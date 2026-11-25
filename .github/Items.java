@@ -83,6 +83,19 @@ public final class Items {
         return id == null ? null : defs.get(id);
     }
 
+    /** Repairs custom armor visuals on items created by older plugin builds. */
+    void refreshVisual(ItemStack s) {
+        Def d = of(s);
+        if (d == null || !d.armor()) return;
+        ItemMeta m = s.getItemMeta();
+        m.setItemModel(new NamespacedKey("beeupdate", d.id()));
+        EquippableComponent eq = m.getEquippable();
+        eq.setSlot(slot(d.kind()));
+        eq.setModel(new NamespacedKey("beeupdate", SETS[d.tier() - 1]));
+        m.setEquippable(eq);
+        s.setItemMeta(m);
+    }
+
     int level(ItemStack s) {
         return s.getItemMeta().getPersistentDataContainer().getOrDefault(levelKey, PersistentDataType.INTEGER, 0);
     }
