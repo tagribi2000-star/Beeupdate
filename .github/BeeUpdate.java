@@ -23,6 +23,7 @@ public final class BeeUpdate extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        migrateSpawnSettings();
         for (String f : new String[]{"mobs.yml", "shop.yml", "messages.yml"})
             if (!new File(getDataFolder(), f).exists()) saveResource(f, false);
         try {
@@ -72,6 +73,29 @@ public final class BeeUpdate extends JavaPlugin {
         } catch (IOException e) {
             getLogger().log(Level.SEVERE, "Could not save balances", e);
         }
+    }
+
+    /** One-time migration so existing servers receive the high-rate surface/cave spawn defaults. */
+    private void migrateSpawnSettings() {
+        var c = getConfig();
+        if (c.getInt("spawning.config-version", 0) >= 2) return;
+        c.set("spawning.enabled", true);
+        c.set("spawning.worlds", java.util.List.of());
+        c.set("spawning.interval-ticks", 60);
+        c.set("spawning.chance-per-player", 0.98);
+        c.set("spawning.attempts-per-player", 4);
+        c.set("spawning.cave-chance", 0.55);
+        c.set("spawning.min-distance", 20);
+        c.set("spawning.max-distance", 48);
+        c.set("spawning.max-per-player", 14);
+        c.set("spawning.nearby-radius", 72);
+        c.set("spawning.max-total", 180);
+        c.set("spawning.despawn-distance", 112);
+        c.set("spawning.world-spawn-protection-radius", 0);
+        c.set("rewards.min-damage-share", 0.0);
+        c.set("rewards.reward-command-spawned", true);
+        c.set("spawning.config-version", 2);
+        saveConfig();
     }
 
     private YamlConfiguration load(String name) throws Exception {
