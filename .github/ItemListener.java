@@ -246,7 +246,22 @@ public final class ItemListener implements Listener {
         if (a != null && b != null && anyCustom(a, b)) e.setResult(null);
     }
 
-    @EventHandler public void join(PlayerJoinEvent e) { dedupe(e.getPlayer()); }
+    private void refreshArmor(Player p) {
+        for (ItemStack stack : p.getInventory().getContents()) items.refreshVisual(stack);
+        for (ItemStack stack : p.getEnderChest().getContents()) items.refreshVisual(stack);
+    }
+
+    @EventHandler public void join(PlayerJoinEvent e) {
+        Player p = e.getPlayer();
+        refreshArmor(p);
+        dedupe(p);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void pickup(EntityPickupItemEvent e) {
+        if (!(e.getEntity() instanceof Player p)) return;
+        plugin.getServer().getScheduler().runTask(plugin, () -> refreshArmor(p));
+    }
 
     /** Two stacks with one unique id in the same player's storage means a copy was made. */
     private void dedupe(Player p) {
