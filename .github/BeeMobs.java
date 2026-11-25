@@ -68,7 +68,6 @@ public final class BeeMobs implements Listener {
         long interval = Math.max(20, plugin.getConfig().getInt("spawning.interval-ticks", 200));
         tasks.add(sch.runTaskTimer(plugin, this::spawnCycle, interval, interval));
         tasks.add(sch.runTaskTimer(plugin, this::think, 20, 20));
-        tasks.add(sch.runTaskTimer(plugin, this::rotate, 2, 2));
     }
 
     Set<String> typeIds() { return types.keySet(); }

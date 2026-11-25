@@ -192,9 +192,25 @@ public final class ItemListener implements Listener {
         if (e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         ItemStack s = e.getItem();
         Items.Def d = items.of(s);
-        if (d == null || !d.id().equals("bee_repellent")) return;
-        e.setCancelled(true);
+        if (d == null) return;
         Player p = e.getPlayer();
+        if (d.id().equals("honey_bomb")) {
+            e.setCancelled(true);
+            Snowball bomb = p.launchProjectile(Snowball.class);
+            bomb.setItem(new ItemStack(Material.SNOWBALL));
+            bomb.getPersistentDataContainer().set(bombKey, PersistentDataType.BOOLEAN, true);
+            bomb.setVelocity(p.getEyeLocation().getDirection().multiply(1.4));
+            ItemStack hand = p.getInventory().getItem(e.getHand());
+            if (hand != null && !hand.getType().isAir()) {
+                hand.setAmount(hand.getAmount() - 1);
+                p.getInventory().setItem(e.getHand(), hand.getAmount() <= 0 ? null : hand);
+            }
+            p.swingHand(e.getHand());
+            p.playSound(p.getLocation(), Sound.ENTITY_SNOWBALL_THROW, 1f, 0.8f);
+            return;
+        }
+        if (!d.id().equals("bee_repellent")) return;
+        e.setCancelled(true);
         long now = System.currentTimeMillis();
         if (now < cooldown.getOrDefault(p.getUniqueId(), 0L)) { plugin.msg(p, "cooldown"); return; }
         cooldown.put(p.getUniqueId(), now + 5000);

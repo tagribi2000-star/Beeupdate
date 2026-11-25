@@ -23,9 +23,9 @@ afk:
   block-radius: 64           # لا ظهور قرب لاعب AFK
 
 rewards:
-  min-damage-share: 0.5      # يجب أن يسبب القاتل 50% على الأقل من الضرر
+  min-damage-share: 0.0      # أي ضرر من اللاعب القاتل يكفي
   max-kills-per-minute: 15
-  reward-command-spawned: false
+  reward-command-spawned: true
 
 models:
   enabled: true              # false = نحل فانيلا ظاهر بدون Resource Pack
