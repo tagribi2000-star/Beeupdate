@@ -1,0 +1,32 @@
+name: BeeUpdate
+version: '1.0.0'
+main: me.beeupdate.BeeUpdate
+api-version: '26.3'
+description: Honey Coin economy, bee mobs and Bee Shop
+commands:
+  honey:
+    description: Honey Coin balance, pay and top
+    usage: "/honey [pay <player> <amount> | top]"
+  bee:
+    description: BeeUpdate commands
+    usage: "/bee help"
+  beeshop:
+    description: Open the Bee Shop
+    usage: "/beeshop"
+permissions:
+  beeupdate.honey: {default: true}
+  beeupdate.pay: {default: true}
+  beeupdate.top: {default: true}
+  beeupdate.help: {default: true}
+  beeupdate.shop: {default: true}
+  beeupdate.admin.give: {default: op}
+  beeupdate.admin.take: {default: op}
+  beeupdate.admin.reload: {default: op}
+  beeupdate.admin.spawn: {default: op}
+  beeupdate.admin:
+    default: op
+    children:
+      beeupdate.admin.give: true
+      beeupdate.admin.take: true
+      beeupdate.admin.reload: true
+      beeupdate.admin.spawn: true

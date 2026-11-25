@@ -1,0 +1,33 @@
+# السعر لكل عنصر. الأطقم لها سعر مخفض مقارنة بالقطع منفردة.
+prices:
+  honey_sword: 250
+  warrior_blade: 500
+  royal_sword: 850
+  queens_blade: 1400
+  honey_pickaxe: 300
+  worker_pickaxe: 550
+  royal_pickaxe: 950
+  queens_pickaxe: 1500
+  worker_helmet: 140
+  worker_chestplate: 250
+  worker_leggings: 215
+  worker_boots: 125
+  worker_set: 700
+  warrior_helmet: 260
+  warrior_chestplate: 470
+  warrior_leggings: 405
+  warrior_boots: 235
+  warrior_set: 1300
+  royal_helmet: 440
+  royal_chestplate: 790
+  royal_leggings: 680
+  royal_boots: 395
+  royal_set: 2200
+  queen_helmet: 700
+  queen_chestplate: 1260
+  queen_leggings: 1085
+  queen_boots: 630
+  queen_set: 3500
+  royal_jelly: 120
+  honey_bomb: 60
+  bee_repellent: 200
