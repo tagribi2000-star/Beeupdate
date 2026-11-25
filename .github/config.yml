@@ -4,16 +4,18 @@ economy:
 
 spawning:
   enabled: true
-  worlds: [world]
-  interval-ticks: 200        # كل 10 ثوانٍ
-  chance-per-player: 0.40
-  min-distance: 24
+  worlds: [world]             # كل عوالم Overworld المحددة هنا؛ [] = كل عوالم Overworld
+  interval-ticks: 60          # كل 3 ثوانٍ
+  chance-per-player: 0.98
+  attempts-per-player: 4      # محاولات ظهور متعددة لكل لاعب
+  cave-chance: 0.55           # 55% كهوف و45% سطح
+  min-distance: 20
   max-distance: 48
-  max-per-player: 3          # أقصى عدد قرب اللاعب الواحد
-  nearby-radius: 64
-  max-total: 40
-  despawn-distance: 96
-  world-spawn-protection-radius: 100
+  max-per-player: 14          # عدد كبير حول كل لاعب
+  nearby-radius: 72
+  max-total: 180
+  despawn-distance: 112
+  world-spawn-protection-radius: 0
   protected-regions:         # إحداثيات X/Z لكل منطقة محمية
     # - {world: world, min-x: 500, min-z: 500, max-x: 700, max-z: 700}
   allowed-ground: [GRASS_BLOCK, DIRT, COARSE_DIRT, PODZOL, SAND, MOSS_BLOCK, SNOW_BLOCK]
