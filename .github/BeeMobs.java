@@ -253,20 +253,28 @@ public final class BeeMobs implements Listener {
         wings.put(bee.getUniqueId(), new ItemDisplay[]{left, right});
     }
 
-    /** Animate only the detached wing displays; the body never receives per-tick rotations. */
+    /** Fast, clearly visible wing beats; the bee body itself is never rotated by this task. */
     private void animateWings() {
         animationStep++;
         for (Map.Entry<UUID, ItemDisplay[]> entry : new ArrayList<>(wings.entrySet())) {
             UUID id = entry.getKey();
             Bee bee = alive.get(id);
             ItemDisplay[] pair = entry.getValue();
-            if (bee == null || !bee.isValid() || !pair[0].isValid() || !pair[1].isValid()) continue;
+            if (bee == null || !bee.isValid() || !pair[0].isValid() || !pair[1].isValid()) {
+                wings.remove(id);
+                continue;
+            }
             Type t = types.get(bee.getPersistentDataContainer().get(typeKey, PersistentDataType.STRING));
             if (t == null) continue;
-            float phase = (float) ((id.hashCode() & 255) * 0.02454369);
-            float flap = (float) Math.sin(animationStep * 0.55 + phase) * 0.72f;
+
+            // A full flap cycle takes about 8 game ticks. Opposite rotations make the
+            // two wings move as a mirrored pair instead of appearing as one rigid plane.
+            float phase = (float) ((id.hashCode() & 255) * (Math.PI * 2.0 / 256.0));
+            float flap = (float) Math.sin(animationStep * 1.05 + phase) * 1.12f;
             float y = (float) plugin.getConfig().getDouble("models.y-offset", -0.35) * t.scale();
             Vector3f scale = new Vector3f(t.scale(), t.scale(), t.scale());
+
+            for (ItemDisplay wing : pair) wing.setInterpolationDuration(2);
             pair[0].setTransformation(new Transformation(new Vector3f(0, y, 0),
                     new Quaternionf().rotationZ(flap), scale, new Quaternionf()));
             pair[1].setTransformation(new Transformation(new Vector3f(0, y, 0),
