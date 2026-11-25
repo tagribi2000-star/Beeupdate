@@ -246,16 +246,46 @@ public final class ItemListener implements Listener {
         if (a != null && b != null && anyCustom(a, b)) e.setResult(null);
     }
 
+    /**
+     * Re-apply the equipment asset component and write each changed stack back.
+     * Inventory#getContents() returns an array snapshot; mutating only that array's
+     * entries is not a reliable way to force the server to resend equipped armor.
+     */
     private void refreshArmor(Player p) {
-        for (ItemStack stack : p.getInventory().getContents()) items.refreshVisual(stack);
-        for (ItemStack stack : p.getInventory().getArmorContents()) items.refreshVisual(stack);
-        for (ItemStack stack : p.getEnderChest().getContents()) items.refreshVisual(stack);
+        var inv = p.getInventory();
+        for (int slot = 0; slot < inv.getSize(); slot++) {
+            ItemStack stack = inv.getItem(slot);
+            if (items.of(stack) == null) continue;
+            items.refreshVisual(stack);
+            inv.setItem(slot, stack);
+        }
+        ItemStack helmet = inv.getHelmet();
+        if (items.of(helmet) != null) { items.refreshVisual(helmet); inv.setHelmet(helmet); }
+        ItemStack chest = inv.getChestplate();
+        if (items.of(chest) != null) { items.refreshVisual(chest); inv.setChestplate(chest); }
+        ItemStack legs = inv.getLeggings();
+        if (items.of(legs) != null) { items.refreshVisual(legs); inv.setLeggings(legs); }
+        ItemStack boots = inv.getBoots();
+        if (items.of(boots) != null) { items.refreshVisual(boots); inv.setBoots(boots); }
+
+        var ender = p.getEnderChest();
+        for (int slot = 0; slot < ender.getSize(); slot++) {
+            ItemStack stack = ender.getItem(slot);
+            if (items.of(stack) == null) continue;
+            items.refreshVisual(stack);
+            ender.setItem(slot, stack);
+        }
+        p.updateInventory();
     }
 
     @EventHandler public void join(PlayerJoinEvent e) {
         Player p = e.getPlayer();
-        refreshArmor(p);
-        dedupe(p);
+        // Run after the join inventory has finished loading, then resend the equipment.
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            if (!p.isOnline()) return;
+            refreshArmor(p);
+            dedupe(p);
+        });
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
