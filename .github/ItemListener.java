@@ -248,6 +248,7 @@ public final class ItemListener implements Listener {
 
     private void refreshArmor(Player p) {
         for (ItemStack stack : p.getInventory().getContents()) items.refreshVisual(stack);
+        for (ItemStack stack : p.getInventory().getArmorContents()) items.refreshVisual(stack);
         for (ItemStack stack : p.getEnderChest().getContents()) items.refreshVisual(stack);
     }
 
@@ -260,6 +261,12 @@ public final class ItemListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void pickup(EntityPickupItemEvent e) {
         if (!(e.getEntity() instanceof Player p)) return;
+        plugin.getServer().getScheduler().runTask(plugin, () -> refreshArmor(p));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void inventoryClick(InventoryClickEvent e) {
+        if (!(e.getWhoClicked() instanceof Player p)) return;
         plugin.getServer().getScheduler().runTask(plugin, () -> refreshArmor(p));
     }
 
