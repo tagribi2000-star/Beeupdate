@@ -102,9 +102,9 @@ public final class BeeMobs implements Listener {
         double nearby = c.getDouble("spawning.nearby-radius", 72);
         double min = Math.max(8, c.getDouble("spawning.min-distance", 20));
         double max = Math.max(min + 1, c.getDouble("spawning.max-distance", 48));
-        int maxTotal = Math.max(1, c.getInt("spawning.max-total", 180));
-        int maxPerPlayer = Math.max(1, c.getInt("spawning.max-per-player", 14));
-        int attempts = Math.max(1, c.getInt("spawning.attempts-per-player", 4));
+        int maxTotal = Math.max(1, c.getInt("spawning.max-total", 400));
+        int maxPerPlayer = Math.max(1, c.getInt("spawning.max-per-player", 32));
+        int attempts = Math.max(1, c.getInt("spawning.attempts-per-player", 12));
         List<String> worlds = c.getStringList("spawning.worlds");
 
         for (Player p : plugin.getServer().getOnlinePlayers()) {
@@ -114,7 +114,7 @@ public final class BeeMobs implements Listener {
                     || (!worlds.isEmpty() && !worlds.contains(w.getName()))
                     || w.getDifficulty() == Difficulty.PEACEFUL
                     || (p.getGameMode() != GameMode.SURVIVAL && p.getGameMode() != GameMode.ADVENTURE)
-                    || plugin.afk().isAfk(p) || repelled.getOrDefault(p.getUniqueId(), 0L) > now
+                    || repelled.getOrDefault(p.getUniqueId(), 0L) > now
                     || rnd.nextDouble() > c.getDouble("spawning.chance-per-player", 0.98)) continue;
 
             long close = alive.values().stream().filter(b -> b.getWorld() == w
@@ -171,7 +171,7 @@ public final class BeeMobs implements Listener {
         for (Player other : w.getPlayers()) {
             double d = other.getLocation().distanceSquared(at);
             if (d < min * min || (d < afkRadius * afkRadius
-                    && (plugin.afk().isAfk(other) || repelled.getOrDefault(other.getUniqueId(), 0L) > now)))
+                    && repelled.getOrDefault(other.getUniqueId(), 0L) > now))
                 return null;
         }
         return at;
@@ -273,6 +273,23 @@ public final class BeeMobs implements Listener {
             float flap = (float) Math.sin(animationStep * 1.05 + phase) * 1.12f;
             float y = (float) plugin.getConfig().getDouble("models.y-offset", -0.35) * t.scale();
             Vector3f scale = new Vector3f(t.scale(), t.scale(), t.scale());
+
+            // Animate the bee body as well as its wings: gentle hover bob and
+            // lean into its current flight direction so the model never looks frozen.
+            ItemDisplay body = displays.get(id);
+            if (body != null && body.isValid()) {
+                var velocity = bee.getVelocity();
+                float bob = (float) Math.sin(animationStep * 0.22 + phase) * 0.035f * t.scale();
+                float yaw = (float) Math.toRadians(-bee.getLocation().getYaw());
+                float pitch = (float) Math.atan2(velocity.getY(),
+                        Math.max(0.05, Math.hypot(velocity.getX(), velocity.getZ())));
+                float roll = (float) Math.atan2(velocity.getX(), velocity.getZ()) * 0.22f;
+                Quaternionf bodyRotation = new Quaternionf().rotationY(yaw)
+                        .rotateX(-pitch * 0.35f).rotateZ(roll);
+                body.setInterpolationDuration(2);
+                body.setTransformation(new Transformation(new Vector3f(0, y + bob, 0),
+                        bodyRotation, scale, new Quaternionf()));
+            }
 
             for (ItemDisplay wing : pair) wing.setInterpolationDuration(2);
             pair[0].setTransformation(new Transformation(new Vector3f(0, y, 0),
