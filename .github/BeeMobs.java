@@ -104,7 +104,7 @@ public final class BeeMobs implements Listener {
         double max = Math.max(min + 1, c.getDouble("spawning.max-distance", 48));
         int maxTotal = Math.max(1, c.getInt("spawning.max-total", 400));
         int maxPerPlayer = Math.max(1, c.getInt("spawning.max-per-player", 32));
-        int attempts = Math.max(1, c.getInt("spawning.attempts-per-player", 12));
+        int attempts = Math.max(1, c.getInt("spawning.attempts-per-player", 64));
         List<String> worlds = c.getStringList("spawning.worlds");
 
         for (Player p : plugin.getServer().getOnlinePlayers()) {
@@ -131,13 +131,27 @@ public final class BeeMobs implements Listener {
     /** Finds safe surface or underground air in an already-loaded chunk. */
     private Location findSpawnLocation(Player p, ThreadLocalRandom rnd, double min, double max, long now) {
         World w = p.getWorld();
-        double angle = rnd.nextDouble(Math.PI * 2);
-        double dist = rnd.nextDouble(min, max);
-        int x = (int) Math.floor(p.getLocation().getX() + Math.cos(angle) * dist);
-        int z = (int) Math.floor(p.getLocation().getZ() + Math.sin(angle) * dist);
-        if (!w.isChunkLoaded(x >> 4, z >> 4)) return null;
+        // Choose only from already-loaded chunks around the player. Randomly picking
+        // coordinates first meant most attempts landed in unloaded chunks and were discarded.
+        List<Chunk> candidates = new ArrayList<>();
+        int pcx = p.getLocation().getBlockX() >> 4;
+        int pcz = p.getLocation().getBlockZ() >> 4;
+        double min2 = min * min, max2 = max * max;
+        for (int cx = pcx - 4; cx <= pcx + 4; cx++) {
+            for (int cz = pcz - 4; cz <= pcz + 4; cz++) {
+                if (!w.isChunkLoaded(cx, cz)) continue;
+                double dx = (cx * 16 + 8) - p.getLocation().getX();
+                double dz = (cz * 16 + 8) - p.getLocation().getZ();
+                double d2 = dx * dx + dz * dz;
+                if (d2 >= min2 && d2 <= max2) candidates.add(w.getChunkAt(cx, cz));
+            }
+        }
+        if (candidates.isEmpty()) return null;
+        Chunk chosen = candidates.get(rnd.nextInt(candidates.size()));
+        int x = chosen.getX() * 16 + rnd.nextInt(16);
+        int z = chosen.getZ() * 16 + rnd.nextInt(16);
 
-        boolean cave = rnd.nextDouble() < plugin.getConfig().getDouble("spawning.cave-chance", 0.55);
+        boolean cave = rnd.nextDouble() < plugin.getConfig().getDouble("spawning.cave-chance", 0.15);
         Block floor = null;
         Block feet = null;
         Block head = null;
