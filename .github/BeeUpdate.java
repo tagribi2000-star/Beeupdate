@@ -78,12 +78,12 @@ public final class BeeUpdate extends JavaPlugin {
     /** One-time migration so existing servers receive the high-rate surface/cave spawn defaults. */
     private void migrateSpawnSettings() {
         var c = getConfig();
-        if (c.getInt("spawning.config-version", 0) >= 3) return;
+        if (c.getInt("spawning.config-version", 0) >= 4) return;
         c.set("spawning.enabled", true);
         c.set("spawning.worlds", java.util.List.of());
         c.set("spawning.interval-ticks", 40);
         c.set("spawning.chance-per-player", 0.98);
-        c.set("spawning.attempts-per-player", 12);
+        c.set("spawning.attempts-per-player", 64);
         c.set("spawning.cave-chance", 0.15);
         c.set("spawning.min-distance", 18);
         c.set("spawning.max-distance", 56);
@@ -94,7 +94,7 @@ public final class BeeUpdate extends JavaPlugin {
         c.set("spawning.world-spawn-protection-radius", 0);
         c.set("rewards.min-damage-share", 0.0);
         c.set("rewards.reward-command-spawned", true);
-        c.set("spawning.config-version", 3);
+        c.set("spawning.config-version", 4);
         saveConfig();
     }
 
