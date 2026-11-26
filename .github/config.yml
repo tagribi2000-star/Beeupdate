@@ -5,15 +5,15 @@ economy:
 spawning:
   enabled: true
   worlds: []                  # كل عوالم Overworld
-  interval-ticks: 40          # كل 3 ثوانٍ
-  chance-per-player: 0.98
-  attempts-per-player: 12      # محاولات ظهور متعددة لكل لاعب
+  interval-ticks: 80          # كل 4 ثوانٍ
+  chance-per-player: 0.85
+  attempts-per-player: 24      # محاولات ظهور متوازنة لكل لاعب
   cave-chance: 0.15           # 55% كهوف و45% سطح
   min-distance: 18
   max-distance: 56
-  max-per-player: 32          # عدد كبير حول كل لاعب
-  nearby-radius: 90
-  max-total: 400
+  max-per-player: 8           # الحد الأقصى حول اللاعب
+  nearby-radius: 70
+  max-total: 100
   despawn-distance: 128
   world-spawn-protection-radius: 0
   protected-regions:         # إحداثيات X/Z لكل منطقة محمية
