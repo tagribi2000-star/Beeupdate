@@ -35,8 +35,6 @@ public final class ItemListener implements Listener {
         this.items = plugin.items();
         this.bombKey = new NamespacedKey(plugin, "honey_bomb");
         plugin.getServer().getScheduler().runTaskTimer(plugin, this::armorTick, 40, 40);
-        plugin.getServer().getScheduler().runTaskTimer(plugin,
-                () -> plugin.getServer().getOnlinePlayers().forEach(this::dedupe), 600, 600);
     }
 
     private static void effect(LivingEntity e, PotionEffectType type, int ticks, int amplifier) {
@@ -279,13 +277,8 @@ public final class ItemListener implements Listener {
     }
 
     @EventHandler public void join(PlayerJoinEvent e) {
-        Player p = e.getPlayer();
-        // Run after the join inventory has finished loading, then resend the equipment.
-        plugin.getServer().getScheduler().runTask(plugin, () -> {
-            if (!p.isOnline()) return;
-            refreshArmor(p);
-            dedupe(p);
-        });
+        // Newly created items already carry their equipment asset. Do not rewrite the
+        // player's inventory on login: Bukkit inventory snapshots can race join/equip.
     }
 
     /** Two stacks with one unique id in the same player's storage means a copy was made. */
