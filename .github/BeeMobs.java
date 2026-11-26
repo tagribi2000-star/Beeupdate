@@ -37,6 +37,7 @@ public final class BeeMobs implements Listener {
     private final Map<UUID, ItemDisplay[]> wings = new HashMap<>();
     private long animationStep;
     private final Map<UUID, Long> lastAttack = new HashMap<>();
+    private final Map<UUID, Long> hurtVersions = new HashMap<>();
     private final Map<UUID, Long> repelled = new HashMap<>();
     private final RewardGuard guard = new RewardGuard();
     private final Map<String, Type> types = new LinkedHashMap<>();
@@ -341,6 +342,7 @@ public final class BeeMobs implements Listener {
         UUID id = b.getUniqueId();
         alive.remove(id);
         lastAttack.remove(id);
+        hurtVersions.remove(id);
         guard.forget(id);
         ItemDisplay d = displays.remove(id);
         if (d != null) d.remove();
@@ -358,6 +360,41 @@ public final class BeeMobs implements Listener {
         if (now - lastAttack.getOrDefault(b.getUniqueId(), 0L) < 1500) { e.setCancelled(true); return; }
         lastAttack.put(b.getUniqueId(), now);
         plugin.getServer().getScheduler().runTask(plugin, () -> { if (b.isValid()) b.setHasStung(false); });
+    }
+
+    /** Render a brief red damage flash on the visible custom model (the real bee is invisible). */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void damageVisual(EntityDamageEvent e) {
+        if (!(e.getEntity() instanceof Bee bee) || !isCustom(bee) || e.getFinalDamage() <= 0) return;
+        UUID id = bee.getUniqueId();
+        String type = bee.getPersistentDataContainer().get(typeKey, PersistentDataType.STRING);
+        if (type == null) return;
+        long version = hurtVersions.getOrDefault(id, 0L) + 1L;
+        hurtVersions.put(id, version);
+        ItemDisplay body = displays.get(id);
+        ItemDisplay[] pair = wings.get(id);
+        if (body == null || !body.isValid()) return;
+        setDisplayModel(body, "mob/" + type + "_hurt");
+        if (pair != null) {
+            if (pair[0].isValid()) setDisplayModel(pair[0], "mob/" + type + "_wing_left_hurt");
+            if (pair[1].isValid()) setDisplayModel(pair[1], "mob/" + type + "_wing_right_hurt");
+        }
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (hurtVersions.getOrDefault(id, 0L) != version) return;
+            ItemDisplay currentBody = displays.get(id);
+            ItemDisplay[] currentWings = wings.get(id);
+            if (currentBody != null && currentBody.isValid()) setDisplayModel(currentBody, "mob/" + type);
+            if (currentWings != null) {
+                if (currentWings[0].isValid()) setDisplayModel(currentWings[0], "mob/" + type + "_wing_left");
+                if (currentWings[1].isValid()) setDisplayModel(currentWings[1], "mob/" + type + "_wing_right");
+            }
+        }, 6L);
+    }
+
+    private void setDisplayModel(ItemDisplay display, String model) {
+        ItemStack item = new ItemStack(Material.PAPER);
+        item.editMeta(meta -> meta.setItemModel(new NamespacedKey("beeupdate", model)));
+        display.setItemStack(item);
     }
 
     /** Custom bees do not poison: keeps difficulty a bit below medium. */
@@ -410,6 +447,7 @@ public final class BeeMobs implements Listener {
         guard.forget(id);
         alive.remove(id);
         lastAttack.remove(id);
+        hurtVersions.remove(id);
         ItemDisplay d = displays.remove(id);
         if (d != null) d.remove();
         ItemDisplay[] pair = wings.remove(id);
