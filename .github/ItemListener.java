@@ -252,30 +252,30 @@ public final class ItemListener implements Listener {
      * entries is not a reliable way to force the server to resend equipped armor.
      */
     private void refreshArmor(Player p) {
+        // Refresh only once after login. Rewriting every slot after every click/pickup
+        // races vanilla armor equip/unequip transactions and can eat the moved stack.
         var inv = p.getInventory();
-        for (int slot = 0; slot < inv.getSize(); slot++) {
-            ItemStack stack = inv.getItem(slot);
-            if (items.of(stack) == null) continue;
-            items.refreshVisual(stack);
-            inv.setItem(slot, stack);
+        ItemStack[] storage = inv.getStorageContents();
+        for (ItemStack stack : storage)
+            if (items.of(stack) != null) items.refreshVisual(stack);
+        inv.setStorageContents(storage);
+
+        ItemStack[] armor = inv.getArmorContents();
+        for (ItemStack stack : armor)
+            if (items.of(stack) != null) items.refreshVisual(stack);
+        inv.setArmorContents(armor);
+
+        ItemStack offhand = inv.getItemInOffHand();
+        if (items.of(offhand) != null) {
+            items.refreshVisual(offhand);
+            inv.setItemInOffHand(offhand);
         }
-        ItemStack helmet = inv.getHelmet();
-        if (items.of(helmet) != null) { items.refreshVisual(helmet); inv.setHelmet(helmet); }
-        ItemStack chest = inv.getChestplate();
-        if (items.of(chest) != null) { items.refreshVisual(chest); inv.setChestplate(chest); }
-        ItemStack legs = inv.getLeggings();
-        if (items.of(legs) != null) { items.refreshVisual(legs); inv.setLeggings(legs); }
-        ItemStack boots = inv.getBoots();
-        if (items.of(boots) != null) { items.refreshVisual(boots); inv.setBoots(boots); }
 
         var ender = p.getEnderChest();
-        for (int slot = 0; slot < ender.getSize(); slot++) {
-            ItemStack stack = ender.getItem(slot);
-            if (items.of(stack) == null) continue;
-            items.refreshVisual(stack);
-            ender.setItem(slot, stack);
-        }
-        p.updateInventory();
+        ItemStack[] contents = ender.getContents();
+        for (ItemStack stack : contents)
+            if (items.of(stack) != null) items.refreshVisual(stack);
+        ender.setContents(contents);
     }
 
     @EventHandler public void join(PlayerJoinEvent e) {
@@ -286,18 +286,6 @@ public final class ItemListener implements Listener {
             refreshArmor(p);
             dedupe(p);
         });
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void pickup(EntityPickupItemEvent e) {
-        if (!(e.getEntity() instanceof Player p)) return;
-        plugin.getServer().getScheduler().runTask(plugin, () -> refreshArmor(p));
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void inventoryClick(InventoryClickEvent e) {
-        if (!(e.getWhoClicked() instanceof Player p)) return;
-        plugin.getServer().getScheduler().runTask(plugin, () -> refreshArmor(p));
     }
 
     /** Two stacks with one unique id in the same player's storage means a copy was made. */
