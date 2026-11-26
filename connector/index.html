@@ -6,66 +6,49 @@
 <meta name="theme-color" content="#101827">
 <title>Bee AI Connector</title>
 <style>
-:root{color-scheme:dark;--bg:#0b1220;--panel:#131f32;--line:#263650;--muted:#9fb0c8;--gold:#f5b942;--green:#43c98b}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#101c30,#080d17 70%);color:#f5f7fb;font:16px system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
-main{width:min(760px,100%);margin:auto;padding:22px 16px 48px}.top{display:flex;align-items:center;gap:12px;margin:8px 0 22px}.logo{width:48px;height:48px;border-radius:15px;background:#f5b942;color:#171717;display:grid;place-items:center;font-size:27px;font-weight:900}.sub{color:var(--muted);font-size:13px;margin-top:3px}h1{font-size:25px;margin:0}h2{font-size:17px;margin:0 0 12px}.panel{background:#131f32;border:1px solid var(--line);border-radius:18px;padding:16px;margin:13px 0}.services{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.service{border:1px solid var(--line);background:#0e1829;border-radius:14px;padding:13px 8px;text-align:center}.service b{display:block;margin-bottom:8px}.service a{display:block;color:var(--gold);font-size:13px;text-decoration:none;padding:8px 3px;border:1px solid #53617a;border-radius:10px}.status{font-size:11px;color:var(--muted);margin-top:7px}label{display:block;font-size:13px;color:#c8d4e5;margin:12px 0 6px}input,textarea{width:100%;border:1px solid #34445e;background:#091321;color:white;border-radius:11px;padding:12px;font:inherit}textarea{min-height:120px;resize:vertical;line-height:1.6}button{border:0;border-radius:12px;padding:12px 14px;font:600 14px system-ui;cursor:pointer;background:var(--gold);color:#171717}.btnrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:11px}.secondary{background:#24334b;color:#f5f7fb;border:1px solid #3b4b65}.green{background:var(--green);color:#07170f}.hint{font-size:12px;color:var(--muted);line-height:1.7}.steps{padding-right:20px;color:#d5deeb;line-height:1.9}.foot{text-align:center;color:#7f91aa;font-size:12px;margin-top:24px}@media(max-width:430px){.services{grid-template-columns:1fr}.service{display:flex;align-items:center;justify-content:space-between;text-align:right}.service b{margin:0}.service a{min-width:118px}}
+:root{color-scheme:dark;--panel:#131f32;--line:#263650;--muted:#9fb0c8;--gold:#f5b942;--green:#43c98b}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#1b3150,#080d17 68%);color:#f5f7fb;font:16px system-ui,-apple-system,"Segoe UI",sans-serif}
+main{width:min(620px,100%);margin:auto;padding:28px 16px 50px}.brand{text-align:center;margin:20px 0 28px}.logo{width:68px;height:68px;margin:0 auto 12px;border-radius:22px;background:var(--gold);color:#171717;display:grid;place-items:center;font-size:38px;font-weight:900;box-shadow:0 10px 40px #f5b94230}h1{font-size:27px;margin:0}.sub{color:var(--muted);font-size:13px;margin-top:7px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px;margin:14px 0}label{display:block;font-size:14px;color:#d6e0ef;margin-bottom:9px}textarea{width:100%;min-height:180px;resize:vertical;border:1px solid #34445e;background:#091321;color:white;border-radius:13px;padding:14px;font:inherit;line-height:1.7}button{width:100%;border:0;border-radius:14px;padding:17px 14px;margin-top:13px;background:var(--gold);color:#171717;font:800 17px system-ui;cursor:pointer;box-shadow:0 7px 22px #f5b94222}button:disabled{opacity:.55;cursor:wait}.status{display:flex;align-items:center;gap:9px;margin:15px 0 2px;color:#dce6f5;font-size:13px}.dot{width:9px;height:9px;border-radius:50%;background:var(--green);flex:none}.hint{color:var(--muted);font-size:12px;line-height:1.8;margin:13px 2px 0}.step{color:var(--gold);font-weight:700}.foot{text-align:center;color:#7588a3;font-size:12px;margin-top:20px}
 </style>
 </head>
 <body>
 <main>
-<header class="top"><div class="logo">B</div><div><h1>Bee AI Connector</h1><div class="sub">مركز واحد للتعاون بين ChatGPT وClaude وGitHub</div></div></header>
+<header class="brand"><div class="logo">B</div><h1>Bee AI Connector</h1><div class="sub">زر واحد لتبادل العمل بين ChatGPT وClaude</div></header>
 <section class="panel">
-<h2>الخدمات</h2>
-<div class="services">
-<div class="service"><b>ChatGPT</b><a href="https://chatgpt.com/" target="_blank" rel="noopener">فتح ChatGPT ↗</a><div class="status">تسجيل الدخول بحسابك</div></div>
-<div class="service"><b>Claude</b><a href="https://claude.ai/" target="_blank" rel="noopener">فتح Claude ↗</a><div class="status">تسجيل الدخول بحسابك</div></div>
-<div class="service"><b>GitHub</b><a id="repoLink" href="https://github.com/tagribi2000-star/Beeupdate" target="_blank" rel="noopener">فتح المستودع ↗</a><div class="status">ملفات المشروع المشتركة</div></div>
-</div>
+<label id="fieldLabel" for="work">اكتب المهمة التي تريد تنفيذها</label>
+<textarea id="work" placeholder="اكتب طلبك هنا... مثال: افحص مشروع BeeUpdate وأصلح الأخطاء واختبر البناء."></textarea>
+<button id="run">🐝 تشغيل الكل</button>
+<div class="status"><span class="dot"></span><span id="status">جاهز — اكتب المهمة واضغط الزر</span></div>
+<p class="hint" id="hint">بعد الضغط، سيتم نسخ التعليمات وفتح Claude. الصق التعليمات هناك، وبعد ردّه ارجع لهذه الصفحة والصق الرد في نفس المربع واضغط الزر نفسه للانتقال إلى ChatGPT.</p>
 </section>
-<section class="panel">
-<h2>1) وصف المهمة</h2>
-<label for="task">اكتب المطلوب مرة واحدة</label>
-<textarea id="task" placeholder="مثال: افحص إضافة BeeUpdate، أصلح الأخطاء، واكتب ملخصًا بالملفات التي تغيرت..."></textarea>
-<label for="repo">رابط مستودع GitHub (اختياري)</label>
-<input id="repo" value="https://github.com/tagribi2000-star/Beeupdate" inputmode="url">
-<div class="btnrow"><button id="toClaude">نسخ المهمة لـ Claude</button><button class="secondary" id="toGPT">نسخ المهمة لـ ChatGPT</button></div>
-<p class="hint">بعد النسخ، افتح المساعد والصق النص بنفسك. الصفحة لا تقرأ محادثاتك ولا ترسل الرسائل نيابةً عنك.</p>
-</section>
-<section class="panel">
-<h2>2) تبادل النتيجة بين المساعدين</h2>
-<label for="result">الصق هنا رد Claude أو ChatGPT</label>
-<textarea id="result" placeholder="الصق الرد أو التعديلات أو تقرير الفحص هنا..."></textarea>
-<div class="btnrow"><button class="green" id="makeHandoff">إنشاء رسالة تسليم للمساعد الآخر</button><button class="secondary" id="copyResult">نسخ النص</button></div>
-<textarea id="handoff" readonly placeholder="رسالة التسليم ستظهر هنا..." style="margin-top:10px"></textarea>
-<div class="btnrow"><button class="secondary" id="download">حفظ التبادل كملف TXT</button><button class="secondary" id="clear">مسح الحقول</button></div>
-</section>
-<section class="panel">
-<h2>طريقة الاستخدام</h2>
-<ol class="steps">
-<li>اكتب المهمة واضغط «نسخ المهمة لـ Claude» أو «نسخ المهمة لـ ChatGPT».</li>
-<li>افتح الخدمة والصق النص، ثم انسخ الرد الناتج.</li>
-<li>ارجع هنا والصق الرد واضغط «إنشاء رسالة تسليم».</li>
-<li>انسخ رسالة التسليم وأرسلها للمساعد الآخر.</li>
-<li>للتغييرات البرمجية، اطلب من المساعد تجهيز الملفات أو Pull Request في GitHub، وراجع التغييرات قبل دمجها.</li>
-</ol>
-</section>
-<section class="panel">
-<h2>حدود النسخة المجانية</h2>
-<p class="hint">هذه صفحة وسيطة تعمل داخل متصفحك ولا تستخدم خادمًا أو API مدفوعًا. لا يوجد ربط حسابات مباشر أو تشغيل تلقائي بين المساعدين. كل خدمة تطلب تسجيل الدخول والموافقة بنفسك، وقد تفرض حدود استخدام مجانية. لا تضع كلمات المرور أو مفاتيح API أو رموز GitHub هنا.</p>
-</section>
-<div class="foot">Bee AI Connector · نسخة تجريبية محلية · لا تجمع بياناتك</div>
+<p class="hint">يعمل بدون API أو اشتراك إضافي. بسبب قيود أمان المواقع، يلزم تسجيل الدخول واللصق يدويًا؛ لا يستطيع الموقع قراءة محادثاتك أو إرسال الرسائل داخل حساباتك تلقائيًا. لا تلصق كلمات مرور أو مفاتيح سرية هنا.</p>
+<div class="foot">Bee AI Connector · مجاني · واجهة موبايل</div>
 </main>
 <script>
-const $=id=>document.getElementById(id);
-const promptFor=(role)=>`أنت تعمل ضمن Bee AI Connector. المطلوب: ${$('task').value.trim()}\n\nمستودع GitHub: ${$('repo').value.trim()||'غير محدد'}\n\nتعليمات: لا تدّع تنفيذ شيء لم تنفذه. اذكر الملفات التي فحصتها أو عدلتها، وما الذي يحتاج موافقة المستخدم. إذا لم يكن لديك وصول للمستودع فاطلب الملفات أو وضّح ذلك. أخرج النتيجة بشكل يمكن للمساعد الآخر متابعتها.`;
-async function copy(text){try{await navigator.clipboard.writeText(text);alert('تم النسخ. افتح المساعد والصق النص.')}catch(e){const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();alert('تم النسخ. افتح المساعد والصق النص.')}}
-$('toClaude').onclick=()=>{if(!$('task').value.trim())return alert('اكتب المهمة أولاً');copy(promptFor('Claude'));};
-$('toGPT').onclick=()=>{if(!$('task').value.trim())return alert('اكتب المهمة أولاً');copy(promptFor('ChatGPT'));};
-$('makeHandoff').onclick=()=>{if(!$('result').value.trim())return alert('الصق رد المساعد أولاً');$('handoff').value='تابع العمل اعتمادًا على نتيجة المساعد السابق التالية. تحقق من صحتها ولا تفترض تنفيذ أي خطوة غير موثقة.\n\nالمهمة الأصلية:\n'+$('task').value+'\n\nرابط المشروع:\n'+$('repo').value+'\n\nنتيجة المساعد السابق:\n'+$('result').value+'\n\nالمطلوب منك: راجع النتيجة، حدّد الأخطاء أو الخطوات التالية، واذكر بوضوح ما تستطيع تنفيذه وما يحتاج تدخلي.';};
-$('copyResult').onclick=()=>copy($('result').value);
-$('download').onclick=()=>{const text='المهمة:\n'+$('task').value+'\n\nالنتيجة:\n'+$('result').value+'\n\nرسالة التسليم:\n'+$('handoff').value;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));a.download='bee-ai-handoff.txt';a.click();URL.revokeObjectURL(a.href);};
-$('clear').onclick=()=>{if(confirm('تمسح كل النصوص المكتوبة؟')){$('task').value='';$('result').value='';$('handoff').value='';}};
-$('repo').addEventListener('change',()=>{$('repoLink').href=$('repo').value.trim()||'https://github.com/';});
+const box=document.getElementById('work'),btn=document.getElementById('run'),status=document.getElementById('status'),hint=document.getElementById('hint'),label=document.getElementById('fieldLabel');
+const repo='https://github.com/tagribi2000-star/Beeupdate';
+let originalTask='',phase=0,lastReply='';
+const steps=[
+{who:'Claude',url:'https://claude.ai/',label:'اكتب المهمة التي تريد تنفيذها',placeholder:'اكتب طلبك هنا...',status:'جاهز — اكتب المهمة واضغط الزر',hint:'سيتم نسخ المهمة وفتح Claude. الصقها هناك، ثم انسخ رد Claude والصقه هنا واضغط الزر نفسه.'},
+{who:'ChatGPT',url:'https://chatgpt.com/',label:'الصق رد Claude هنا',placeholder:'انسخ رد Claude بالكامل والصقه هنا...',status:'بانتظار رد Claude',hint:'بعد لصق رد Claude، اضغط الزر. سنجهز طلب مراجعة لـ ChatGPT ونفتح محادثته.'},
+{who:'Claude',url:'https://claude.ai/',label:'الصق مراجعة ChatGPT هنا',placeholder:'انسخ مراجعة ChatGPT والصقها هنا...',status:'بانتظار مراجعة ChatGPT',hint:'بعد لصق مراجعة ChatGPT، اضغط الزر لإرجاع الملاحظات إلى Claude.'}
+];
+function promptFor(target,reply){
+ if(target==='Claude'&&!reply)return 'أنت شريك التطوير في Bee AI Connector. نفّذ المهمة التالية بأمانة، ولا تدّع تنفيذ ما لم تنفذه. اذكر الملفات التي فحصتها وعدلتها والاختبارات ونتائجها، واطلب الموافقة قبل أي تغيير مدمر.\n\nالمهمة:\n'+originalTask+'\n\nمستودع GitHub:\n'+repo+'\n\nبعد الانتهاء، اكتب ملخصًا واضحًا يمكن إرساله إلى ChatGPT لمراجعته.';
+ if(target==='ChatGPT')return 'راجع عمل Claude التالي مراجعة مستقلة. اكتشف الأخطاء والثغرات والخطوات الناقصة، ولا تفترض أن التنفيذ صحيح دون دليل. أعطني ملاحظات عملية قابلة للإرسال إلى Claude.\n\nالمهمة الأصلية:\n'+originalTask+'\n\nرابط المشروع:\n'+repo+'\n\nرد Claude:\n'+reply;
+ return 'هذه مراجعة ChatGPT لعملك. عالج الملاحظات الصحيحة فقط، واشرح أي نقطة ترفضها مع السبب. لا تدّع تعديل ملفات GitHub دون تنفيذ فعلي.\n\nالمهمة الأصلية:\n'+originalTask+'\n\nمراجعة ChatGPT:\n'+reply+'\n\nأعد تقريرًا نهائيًا واضحًا.';
+}
+async function copyPrompt(text){
+ try{await navigator.clipboard.writeText(text);return true}
+ catch(e){const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();const ok=document.execCommand('copy');t.remove();return ok}
+}
+btn.addEventListener('click',async()=>{
+ const value=box.value.trim();
+ if(phase===0){if(!value){status.textContent='اكتب المهمة أولاً';return}originalTask=value;const prompt=promptFor('Claude','');window.open('https://claude.ai/','_blank','noopener');const ok=await copyPrompt(prompt);phase=1;box.value='';label.textContent=steps[1].label;box.placeholder=steps[1].placeholder;status.textContent=ok?'تم نسخ المهمة — الصقها في Claude':'تعذر النسخ تلقائيًا؛ حاول السماح بالنسخ';hint.textContent=steps[1].hint;btn.textContent='إرسال رد Claude إلى ChatGPT';return}
+ if(!value){status.textContent='الصق رد المساعد أولاً';return}
+ const target=phase===1?'ChatGPT':'Claude';const prompt=promptFor(target,value);window.open(target==='ChatGPT'?'https://chatgpt.com/':'https://claude.ai/','_blank','noopener');const ok=await copyPrompt(prompt);phase=phase===1?2:1;box.value='';label.textContent=phase===2?steps[2].label:steps[1].label;box.placeholder=phase===2?steps[2].placeholder:steps[1].placeholder;status.textContent=ok?'تم تجهيز الرسالة ونسخها — الصقها في '+target:'تعذر النسخ تلقائيًا؛ حاول السماح بالنسخ';hint.textContent=phase===2?'بعد مراجعة ChatGPT، الصق رده هنا واضغط الزر لإرجاعه إلى Claude.':'بعد رد Claude، الصق الرد هنا واضغط الزر لمراجعته بواسطة ChatGPT.';btn.textContent=phase===2?'إرسال مراجعة ChatGPT إلى Claude':'إرسال رد Claude إلى ChatGPT';
+});
 </script>
 </body>
 </html>
