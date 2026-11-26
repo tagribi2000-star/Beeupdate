@@ -99,12 +99,12 @@ public final class BeeMobs implements Listener {
         if (!c.getBoolean("spawning.enabled", true) || types.isEmpty()) return;
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
         long now = System.currentTimeMillis();
-        double nearby = c.getDouble("spawning.nearby-radius", 72);
+        double nearby = c.getDouble("spawning.nearby-radius", 70);
         double min = Math.max(8, c.getDouble("spawning.min-distance", 20));
         double max = Math.max(min + 1, c.getDouble("spawning.max-distance", 48));
-        int maxTotal = Math.max(1, c.getInt("spawning.max-total", 400));
-        int maxPerPlayer = Math.max(1, c.getInt("spawning.max-per-player", 32));
-        int attempts = Math.max(1, c.getInt("spawning.attempts-per-player", 64));
+        int maxTotal = Math.max(1, c.getInt("spawning.max-total", 100));
+        int maxPerPlayer = Math.max(1, c.getInt("spawning.max-per-player", 8));
+        int attempts = Math.max(1, c.getInt("spawning.attempts-per-player", 24));
         List<String> worlds = c.getStringList("spawning.worlds");
 
         for (Player p : plugin.getServer().getOnlinePlayers()) {
@@ -115,7 +115,7 @@ public final class BeeMobs implements Listener {
                     || w.getDifficulty() == Difficulty.PEACEFUL
                     || (p.getGameMode() != GameMode.SURVIVAL && p.getGameMode() != GameMode.ADVENTURE)
                     || repelled.getOrDefault(p.getUniqueId(), 0L) > now
-                    || rnd.nextDouble() > c.getDouble("spawning.chance-per-player", 0.98)) continue;
+                    || rnd.nextDouble() > c.getDouble("spawning.chance-per-player", 0.85)) continue;
 
             long close = alive.values().stream().filter(b -> b.getWorld() == w
                     && b.getLocation().distanceSquared(p.getLocation()) < nearby * nearby).count();
